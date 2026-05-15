@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deutsch Lernen - Modern Bright Mode</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+
+        .card {
+            background: white;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+            border: 1px solid #f1f5f9;
+        }
+
+        .nav-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 0.75rem;
+            font-weight: 600;
+        }
+
+        .nav-btn.active {
+            background-color: #4f46e5;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3);
+        }
+
+        .option-btn {
+            width: 100%;
+            text-align: left;
+            padding: 1.25rem 1.5rem;
+            border-radius: 1rem;
+            border: 2px solid #f1f5f9;
+            background: white;
+            transition: all 0.2s;
+            font-weight: 500;
+            font-size: 1.05rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option-btn:hover:not(:disabled) {
+            border-color: #4f46e5;
+            background-color: #f5f3ff;
+            color: #4f46e5;
+        }
+
+        .option-btn.correct {
+            background-color: #ecfdf5;
+            border-color: #10b981;
+            color: #065f46;
+        }
+
+        .option-btn.wrong {
+            background-color: #fef2f2;
+            border-color: #ef4444;
+            color: #991b1b;
+        }
+
+        .option-btn.reveal-correct {
+            border-color: #10b981;
+            background-color: #ecfdf5;
+        }
+
+        .score-bar {
+            height: 8px;
+            background-color: #f1f5f9;
+            border-radius: 999px;
+            overflow: hidden;
+        }
+
+        .score-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #4f46e5, #818cf8);
+            transition: width 0.5s ease-out;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .btn-primary {
+            background-color: #4f46e5;
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 1rem;
+            font-weight: 700;
+            transition: all 0.3s;
+            display: inline-flex;
+            items-center;
+            gap: 0.5rem;
+        }
+
+        .btn-primary:hover {
+            background-color: #4338ca;
+            transform: scale(1.02);
+        }
+
+        .explanation-box {
+            border-radius: 1rem;
+            padding: 1.5rem;
+            border-left: 6px solid;
+            margin-top: 1.5rem;
+        }
+
+        .level-badge {
+            font-size: 0.65rem;
+            padding: 0.25rem 0.6rem;
+            border-radius: 999px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .level-easy {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+
+        .level-medium {
+            background-color: #fef9c3;
+            color: #854d0e;
+        }
+
+        .level-hard {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f8fafc;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #cbd5e1;
+        }
+    </style>
+</head>
+
+<body class="p-4 md:p-8">
+    <div class="max-w-6xl mx-auto">
+        <!-- Header -->
+        <div class="flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
+            <div>
+                <h1 class="text-4xl font-black text-slate-900 tracking-tight mb-2">Học Tiếng Đức <span
+                        class="text-indigo-600">Chuyên Sâu</span></h1>
+                <p class="text-slate-500 font-medium">Hệ thống bài tập 45 câu mỗi chuyên đề - A1/A2 Context-based</p>
+            </div>
+            <div class="bg-white px-6 py-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
+                <div class="w-12 h-12 bg-indigo-50 rounded-full flex items-center justify-center">
+                    <span class="text-2xl">🏆</span>
+                </div>
+                <div>
+                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Tổng điểm tích lũy</p>
+                    <p class="text-2xl font-black text-indigo-600" id="globalScoreVal">0</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex flex-wrap gap-2 mb-10 overflow-x-auto pb-2 scrollbar-hide">
+            <button onclick="switchTab('theory', this)"
+                class="nav-btn px-5 py-3 text-slate-600 hover:bg-slate-100 active">Lý thuyết</button>
+            <button onclick="switchTab('vocab', this)" class="nav-btn px-5 py-3 text-slate-600 hover:bg-slate-100">Từ
+                vựng & Nhà</button>
+            <button onclick="switchTab('body', this)" class="nav-btn px-5 py-3 text-slate-600 hover:bg-slate-100">Cơ thể
+                & Sức khỏe</button>
+            <button onclick="switchTab('pronoun', this)" class="nav-btn px-5 py-3 text-slate-600 hover:bg-slate-100">Đại
+                từ</button>
+            <button onclick="switchTab('possessive', this)"
+                class="nav-btn px-5 py-3 text-slate-600 hover:bg-slate-100">Sở hữu</button>
+            <button onclick="switchTab('dativ', this)" class="nav-btn px-5 py-3 text-slate-600 hover:bg-slate-100">Dativ
+                & Giới từ</button>
+            <button onclick="switchTab('modal', this)" class="nav-btn px-5 py-3 text-slate-600 hover:bg-slate-100">Modal
+                Verben</button>
+            <button onclick="switchTab('general', this)"
+                class="nav-btn px-5 py-3 text-slate-600 hover:bg-slate-100 bg-indigo-50 text-indigo-600">Tổng hợp 45
+                câu</button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <div class="card p-6 md:p-10 min-h-[500px]">
+            <!-- Theory Tab -->
+            <div id="tab-theory" class="tab-content active">
+                <div class="prose prose-slate max-w-none">
+                    <div class="flex items-center gap-3 mb-8">
+                        <div
+                            class="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-bold">
+                            A1</div>
+                        <h2 class="text-2xl font-bold text-slate-800 m-0">Hệ thống lý thuyết trọng tâm</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="space-y-6">
+                            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                                <h3 class="text-indigo-600 font-bold mb-4 flex items-center gap-2">
+                                    <span>🏠</span> Từ vựng Nhà cửa (Wohnen)
+                                </h3>
+                                <ul class="space-y-2 text-sm text-slate-600">
+                                    <li><b class="text-slate-800">Möbel:</b> Der Stuhl, der Tisch, das Bett, der
+                                        Schrank.</li>
+                                    <li><b class="text-slate-800">Zimmer:</b> Die Küche, das Bad, das Wohnzimmer.</li>
+                                    <li><b class="text-slate-800">Vertrag:</b> Die Miete, die Kaution, der Mietvertrag.
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                                <h3 class="text-indigo-600 font-bold mb-4 flex items-center gap-2">
+                                    <span>👤</span> Đại từ nhân xưng (Pronomen)
+                                </h3>
+                                <table class="w-full text-xs text-left">
+                                    <thead>
+                                        <tr class="text-slate-400">
+                                            <th>Nominativ</th>
+                                            <th>Akkusativ</th>
+                                            <th>Dativ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-slate-600">
+                                        <tr class="border-b border-slate-200">
+                                            <td>ich</td>
+                                            <td>mich</td>
+                                            <td>mir</td>
+                                        </tr>
+                                        <tr class="border-b border-slate-200">
+                                            <td>du</td>
+                                            <td>dich</td>
+                                            <td>dir</td>
+                                        </tr>
+                                        <tr class="border-b border-slate-200">
+                                            <td>er/es/sie</td>
+                                            <td>ihn/es/sie</td>
+                                            <td>ihm/ihm/ihr</td>
+                                        </tr>
+                                        <tr>
+                                            <td>Sie (trang trọng)</td>
+                                            <td>Sie</td>
+                                            <td>Ihnen</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="space-y-6">
+                            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                                <h3 class="text-indigo-600 font-bold mb-4 flex items-center gap-2">
+                                    <span>🩺</span> Sức khỏe & Cơ thể (Körper)
+                                </h3>
+                                <ul class="space-y-2 text-sm text-slate-600">
+                                    <li><b class="text-slate-800">Körperteile:</b> Der Kopf, der Arm, das Bein, die
+                                        Hand.</li>
+                                    <li><b class="text-slate-800">Sinne:</b> Sehen (Augen), Hören (Ohren), Riechen
+                                        (Nase).</li>
+                                    <li><b class="text-slate-800">Krankheit:</b> Das Fieber, der Schnupfen, die
+                                        Schmerzen.</li>
+                                </ul>
+                            </div>
+                            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                                <h3 class="text-indigo-600 font-bold mb-4 flex items-center gap-2">
+                                    <span>📍</span> Giới từ Dativ (Wo?)
+                                </h3>
+                                <p class="text-xs text-slate-500 mb-3">Dùng khi chỉ vị trí cố định hoặc hành động không
+                                    di chuyển.</p>
+                                <div class="flex flex-wrap gap-2">
+                                    <span class="bg-white px-2 py-1 rounded border text-xs font-bold">in + dem =
+                                        im</span>
+                                    <span class="bg-white px-2 py-1 rounded border text-xs font-bold">an + dem =
+                                        am</span>
+                                    <span class="bg-white px-2 py-1 rounded border text-xs font-bold">bei + dem =
+                                        beim</span>
+                                    <span class="bg-white px-2 py-1 rounded border text-xs font-bold">zu + dem =
+                                        zum</span>
+                                </div>
+                            </div>
+                            <div class="bg-slate-50 p-6 rounded-2xl border border-slate-100">
+                                <h3 class="text-indigo-600 font-bold mb-4 flex items-center gap-2">
+                                    <span>⚙️</span> Modal Verben (Động từ khuyết thiếu)
+                                </h3>
+                                <ul class="space-y-2 text-sm text-slate-600">
+                                    <li><b class="text-slate-800">können:</b> Khả năng (Tôi có thể bơi).</li>
+                                    <li><b class="text-slate-800">müssen:</b> Bắt buộc (Tôi phải học).</li>
+                                    <li><b class="text-slate-800">dürfen:</b> Cho phép (Tôi được phép đỗ xe).</li>
+                                    <li><b class="text-slate-800">sollen:</b> Lời khuyên (Bạn nên uống thuốc).</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quiz Tabs -->
+            <div id="tab-vocab" class="tab-content"></div>
+            <div id="tab-body" class="tab-content"></div>
+            <div id="tab-pronoun" class="tab-content"></div>
+            <div id="tab-possessive" class="tab-content"></div>
+            <div id="tab-dativ" class="tab-content"></div>
+            <div id="tab-modal" class="tab-content"></div>
+            <div id="tab-general" class="tab-content"></div>
+        </div>
+    </div>
+
+    <script>
+        let globalScore = 0;
+
+        function updateGlobalScore(add) {
+            globalScore += add;
+            document.getElementById('globalScoreVal').textContent = globalScore;
+        }
+
+        function shuffle(arr) {
+            const a = [...arr];
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        function switchTab(id, btn) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById('tab-' + id).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        class Quiz {
+            constructor(containerId, questions, title) {
+                this.container = document.getElementById(containerId);
+                this.allQuestions = questions;
+                this.title = title;
+                this.reset();
+            }
+
+            reset() {
+                this.questions = shuffle(this.allQuestions);
+                this.current = 0;
+                this.score = 0;
+                this.answered = false;
+                this.render();
+            }
+
+            render() {
+                if (this.current >= this.questions.length) {
+                    this.renderResult();
+                    return;
+                }
+
+                const q = this.questions[this.current];
+                const opts = shuffle(q.options);
+                const progress = ((this.current) / this.questions.length) * 100;
+                const levelClass = `level-${q.level}`;
+
+                this.container.innerHTML = `
+                    <div class="max-w-2xl mx-auto">
+                        <div class="flex justify-between items-start mb-6">
+                            <div class="flex-1">
+                                <div class="flex items-center gap-2 mb-3">
+                                    <span class="text-[10px] font-bold px-2 py-0.5 bg-indigo-100 text-indigo-700 rounded uppercase tracking-wider">${this.title}</span>
+                                    <span class="level-badge ${levelClass}">${q.level}</span>
+                                </div>
+                                <h2 class="text-xl md:text-2xl font-semibold text-slate-800 leading-snug">
+                                    ${q.question.replace('___', '<span class="text-indigo-600 font-bold border-b-2 border-indigo-200 px-2">___</span>')}
+                                </h2>
+                            </div>
+                            <div class="text-right ml-6 shrink-0">
+                                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tiến độ</p>
+                                <div class="inline-flex items-center justify-center w-12 h-12 rounded-full border-2 border-indigo-100">
+                                    <span class="text-sm font-bold text-indigo-600">${this.current + 1}/${this.questions.length}</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="score-bar mb-8"><div class="score-fill" style="width:${progress}%"></div></div>
+
+                        <div class="grid grid-cols-1 gap-3">
+                            ${opts.map(o => `<button class="option-btn" data-opt="${o}">${o}</button>`).join('')}
+                        </div>
+
+                        <div id="explanation-${this.container.id}" class="hidden opacity-0 transition-all duration-300"></div>
+                        
+                        <button id="next-${this.container.id}" class="btn-primary mt-8 hidden shadow-lg shadow-indigo-200 transform transition-all active:scale-95">Tiếp theo →</button>
+                    </div>
+                `;
+
+                this.container.querySelectorAll('.option-btn').forEach(btn => {
+                    btn.onclick = () => this.handleAnswer(btn);
+                });
+
+                const nextBtn = this.container.querySelector(`#next-${this.container.id}`);
+                if (nextBtn) nextBtn.onclick = () => {
+                    this.current++;
+                    this.answered = false;
+                    this.render();
+                };
+            }
+
+            handleAnswer(selectedBtn) {
+                if (this.answered) return;
+                this.answered = true;
+                const q = this.questions[this.current];
+                const selected = selectedBtn.getAttribute('data-opt');
+                const isCorrect = selected === q.correct;
+
+                this.container.querySelectorAll('.option-btn').forEach(btn => {
+                    btn.disabled = true;
+                    if (btn.getAttribute('data-opt') === q.correct) {
+                        btn.classList.add('reveal-correct');
+                    }
+                });
+
+                if (isCorrect) {
+                    selectedBtn.classList.add('correct');
+                    this.score++;
+                    updateGlobalScore(1);
+                } else {
+                    selectedBtn.classList.add('wrong');
+                }
+
+                const expDiv = this.container.querySelector(`#explanation-${this.container.id}`);
+                expDiv.className = `explanation-box mt-6 opacity-100 ${isCorrect ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'}`;
+                expDiv.innerHTML = `
+                    <div class="flex items-start gap-3">
+                        <span class="text-lg">${isCorrect ? '✅' : 'ℹ️'}</span>
+                        <div>
+                            <p class="font-bold mb-1 text-sm">${isCorrect ? 'Chính xác!' : 'Giải thích:'}</p>
+                            <p class="text-sm leading-relaxed">${q.explanation}</p>
+                        </div>
+                    </div>
+                `;
+                expDiv.classList.remove('hidden');
+
+                const nextBtn = this.container.querySelector(`#next-${this.container.id}`);
+                nextBtn.classList.remove('hidden');
+                nextBtn.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+
+            renderResult() {
+                const pct = Math.round((this.score / this.questions.length) * 100);
+                this.container.innerHTML = `
+                    <div class="card p-12 text-center max-w-md mx-auto">
+                        <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <span class="text-3xl">🏁</span>
+                        </div>
+                        <h2 class="text-4xl font-black text-indigo-600 mb-2">${this.score}/${this.questions.length}</h2>
+                        <p class="text-slate-500 mb-8 font-medium">${pct >= 80 ? 'Xuất sắc! Bạn đã nắm vững mục này.' : 'Cố gắng lên, hãy làm lại để ghi nhớ tốt hơn!'}</p>
+                        <button class="btn-primary shadow-lg shadow-indigo-200" id="retry-${this.container.id}">Làm lại từ đầu</button>
+                    </div>
+                `;
+                this.container.querySelector(`#retry-${this.container.id}`).onclick = () => this.reset();
+            }
+        }
+
+        // --- VOCABULARY & HOUSING DATA (45 Context-based Questions) ---
+        const vocabQuestions = [
+            { question: "Ich sitze auf dem ___, um zu essen.", options: ["Stuhl", "Tisch", "Bett", "Kühlschrank"], correct: "Stuhl", level: "easy", explanation: "Der Stuhl: cái ghế (dùng để ngồi)." },
+            { question: "Das ___ ist sehr bequem, ich schlafe hier gut.", options: ["Bett", "Sofa", "Regal", "Bad"], correct: "Bett", level: "easy", explanation: "Das Bett: cái giường (nơi để ngủ)." },
+            { question: "Meine Mutter kocht das Essen in der ___.", options: ["Küche", "Garage", "Toilette", "Flur"], correct: "Küche", level: "easy", explanation: "Die Küche: nhà bếp (nơi nấu ăn)." },
+            { question: "Ich brauche den ___, um die Tür zu öffnen.", options: ["Schlüssel", "Hammer", "Löffel", "Stift"], correct: "Schlüssel", level: "medium", explanation: "Der Schlüssel: chìa khóa (dùng để mở cửa)." },
+            { question: "Die Milch ist im ___, damit sie kalt bleibt.", options: ["Kühlschrank", "Herd", "Backofen", "Keller"], correct: "Kühlschrank", level: "medium", explanation: "Der Kühlschrank: tủ lạnh (giữ đồ ăn lạnh)." },
+            { question: "Bevor ich einziehe, muss ich den ___ unterschreiben.", options: ["Mietvertrag", "Pass", "Brief", "Katalog"], correct: "Mietvertrag", level: "hard", explanation: "Der Mietvertrag: hợp đồng thuê nhà." },
+            { question: "Ich muss 1000 Euro ___ an den Vermieter zahlen.", options: ["Kaution", "Nebenkosten", "Miete", "Rechnung"], correct: "Kaution", level: "hard", explanation: "Die Kaution: tiền đặt cọc thuê nhà." },
+            { question: "Ich wohne mit zwei Freunden in einer ___.", options: ["WG", "Villa", "Hütte", "Schule"], correct: "WG", level: "medium", explanation: "WG (Wohngemeinschaft): căn hộ chung chủ/nhóm bạn thuê chung." },
+            { question: "Im Winter ist es kalt, ich mache die ___ an.", options: ["Heizung", "Lüftung", "Lampe", "Tür"], correct: "Heizung", level: "medium", explanation: "Die Heizung: hệ thống sưởi." },
+            { question: "Der Boden ist schmutzig, ich benutze den ___.", options: ["Staubsauger", "Toaster", "Spiegel", "Föhn"], correct: "Staubsauger", level: "medium", explanation: "Der Staubsauger: máy hút bụi." },
+            { question: "Mein Zimmer liegt ganz oben im ___.", options: ["Dachgeschoss", "Keller", "Erdgeschoss", "Flur"], correct: "Dachgeschoss", level: "hard", explanation: "Das Dachgeschoss: tầng áp mái." },
+            { question: "Herr Müller ist mein ___, ihm gehört das Haus.", options: ["Vermieter", "Mieter", "Nachbar", "Makler"], correct: "Vermieter", level: "medium", explanation: "Der Vermieter: chủ nhà cho thuê." },
+            { question: "Wir ziehen morgen um, der ___ ist anstrengend.", options: ["Umzug", "Ausflug", "Besuch", "Urlaub"], correct: "Umzug", level: "hard", explanation: "Der Umzug: việc chuyển nhà." },
+            { question: "Ich wasche mein Gesicht im ___.", options: ["Badezimmer", "Schlafzimmer", "Wohnzimmer", "Keller"], correct: "Badezimmer", level: "easy", explanation: "Das Badezimmer: phòng tắm." },
+            { question: "Es ist dunkel, bitte mach die ___ an.", options: ["Lampe", "Uhr", "Vase", "Tasche"], correct: "Lampe", level: "easy", explanation: "Die Lampe: cái đèn." },
+            { question: "In der Nacht brauche ich eine warme ___.", options: ["Decke", "Matratze", "Brille", "Hose"], correct: "Decke", level: "medium", explanation: "Die Decke: cái chăn." },
+            { question: "Mein Kopf liegt weich auf dem ___.", options: ["Kissen", "Tisch", "Boden", "Schrank"], correct: "Kissen", level: "easy", explanation: "Das Kissen: cái gối." },
+            { question: "Ich sitze gern draußen auf dem ___.", options: ["Balkon", "Flur", "Dachboden", "Keller"], correct: "Balkon", level: "medium", explanation: "Der Balkon: ban công." },
+            { question: "Die schmutzige Wäsche kommt in die ___.", options: ["Waschmaschine", "Spülmaschine", "Mikrowelle", "Kaffeemaschine"], correct: "Waschmaschine", level: "easy", explanation: "Die Waschmaschine: máy giặt." },
+            { question: "Ich lerne an meinem ___.", options: ["Schreibtisch", "Esstisch", "Couchtisch", "Nachttisch"], correct: "Schreibtisch", level: "medium", explanation: "Der Schreibtisch: bàn làm việc/học tập." },
+            { question: "Das Auto steht in der ___.", options: ["Garage", "Küche", "Toilette", "Wohnung"], correct: "Garage", level: "easy", explanation: "Die Garage: gara để xe." },
+            { question: "Ich nehme nicht den Aufzug, ich gehe die ___.", options: ["Treppe", "Tür", "Wand", "Decke"], correct: "Treppe", level: "medium", explanation: "Die Treppe: cầu thang bộ." },
+            { question: "Das Geschäft liegt unten im ___.", options: ["Erdgeschoss", "Keller", "Dach", "Himmel"], correct: "Erdgeschoss", level: "medium", explanation: "Das Erdgeschoss: tầng trệt." },
+            { question: "Meine Kleidung hängt im ___.", options: ["Kleiderschrank", "Regal", "Kühlschrank", "Bett"], correct: "Kleiderschrank", level: "medium", explanation: "Der Kleiderschrank: tủ quần áo." },
+            { question: "Ich koche die Suppe auf dem ___.", options: ["Herd", "Tisch", "Balkon", "Spiegel"], correct: "Herd", level: "medium", explanation: "Der Herd: bếp nấu." },
+            { question: "Wir backen die Pizza im ___.", options: ["Backofen", "Kühlschrank", "Waschbecken", "Eimer"], correct: "Backofen", level: "medium", explanation: "Der Backofen: lò nướng." },
+            { question: "Ich spüle das Geschirr in der ___.", options: ["Spüle", "Dusche", "Badewanne", "Heizung"], correct: "Spüle", level: "hard", explanation: "Die Spüle: bồn rửa bát." },
+            { question: "Wirf den Müll bitte in den ___.", options: ["Mülleimer", "Koffer", "Rucksack", "Schuh"], correct: "Mülleimer", level: "easy", explanation: "Der Mülleimer: thùng rác." },
+            { question: "Herr Schmidt wohnt neben mir, er ist mein ___.", options: ["Nachbar", "Lehrer", "Arzt", "Chef"], correct: "Nachbar", level: "easy", explanation: "Der Nachbar: hàng xóm." },
+            { question: "Ich zahle monatlich 500 Euro ___.", options: ["Miete", "Nebenkosten", "Kaution", "Steuer"], correct: "Miete", level: "medium", explanation: "Die Miete: tiền thuê nhà hàng tháng." },
+            { question: "Ich sehe durch den ___, wer an der Tür ist.", options: ["Türspion", "Fenster", "Spiegel", "Fernseher"], correct: "Türspion", level: "hard", explanation: "Der Türspion: mắt mèo trên cửa." },
+            { question: "Zieh bitte den ___ zu, es ist zu hell.", options: ["Vorhang", "Teppich", "Boden", "Schrank"], correct: "Vorhang", level: "medium", explanation: "Der Vorhang: rèm cửa." },
+            { question: "Auf dem Boden liegt ein weicher ___.", options: ["Teppich", "Fliese", "Wand", "Decke"], correct: "Teppich", level: "medium", explanation: "Der Teppich: thảm." },
+            { question: "Ich kämme meine Haare vor dem ___.", options: ["Spiegel", "Bild", "Fenster", "Schrank"], correct: "Spiegel", level: "easy", explanation: "Der Spiegel: cái gương." },
+            { question: "Die ___ an der Wand zeigt 10 Uhr.", options: ["Uhr", "Lampe", "Karte", "Tasche"], correct: "Uhr", level: "easy", explanation: "Die Uhr: đồng hồ." },
+            { question: "Ich gieße die Blumen mit der ___.", options: ["Gießkanne", "Tasse", "Flasche", "Pfanne"], correct: "Gießkanne", level: "hard", explanation: "Die Gießkanne: bình tưới cây." },
+            { question: "Wir lagern alte Sachen im ___.", options: ["Keller", "Wohnzimmer", "Büro", "Küche"], correct: "Keller", level: "medium", explanation: "Der Keller: tầng hầm." },
+            { question: "Ich fege den Boden mit einem ___.", options: ["Besen", "Löffel", "Pinsel", "Stift"], correct: "Besen", level: "medium", explanation: "Der Besen: cái chổi." },
+            { question: "Die Bücher stehen im ___.", options: ["Bücherregal", "Bett", "Sofa", "Herd"], correct: "Bücherregal", level: "easy", explanation: "Das Bücherregal: kệ sách." },
+            { question: "Wir sehen abends im ___ fern.", options: ["Wohnzimmer", "Bad", "Flur", "Balkon"], correct: "Wohnzimmer", level: "easy", explanation: "Das Wohnzimmer: phòng khách." },
+            { question: "Wo ist die ___ für den Fernseher?", options: ["Fernbedienung", "Tastatur", "Maus", "Kabel"], correct: "Fernbedienung", level: "hard", explanation: "Die Fernbedienung: điều khiển từ xa." },
+            { question: "Es kommt kein Wasser aus dem ___.", options: ["Wasserhahn", "Heizkörper", "Lichtschalter", "Ofen"], correct: "Wasserhahn", level: "medium", explanation: "Der Wasserhahn: vòi nước." },
+            { question: "Ich mache mir einen Kaffee mit der ___.", options: ["Kaffeemaschine", "Spülmaschine", "Waschmaschine", "Heizung"], correct: "Kaffeemaschine", level: "easy", explanation: "Die Kaffeemaschine: máy pha cà phê." },
+            { question: "Ich koche Wasser im ___.", options: ["Wasserkocher", "Toaster", "Kühlschrank", "Ofen"], correct: "Wasserkocher", level: "medium", explanation: "Der Wasserkocher: ấm đun nước điện." },
+            { question: "Möchtest du eine Scheibe Toast aus dem ___?", options: ["Toaster", "Herd", "Kühlschrank", "Eimer"], correct: "Toaster", level: "easy", explanation: "Der Toaster: máy nướng bánh mỳ." }
+        ];
+
+        // --- BODY & HEALTH DATA (45 Questions - External Parts Only) ---
+        const bodyQuestions = [
+            { question: "Ich sehe mit meinen ___.", options: ["Augen", "Ohren", "Händen", "Füßen"], correct: "Augen", level: "easy", explanation: "Das Auge: mắt (dùng để nhìn)." },
+            { question: "Ich höre Musik mit meinen ___.", options: ["Ohren", "Augen", "Nase", "Mund"], correct: "Ohren", level: "easy", explanation: "Das Ohr: tai (dùng để nghe)." },
+            { question: "Mein ___ tut weh, ich brauche eine Tablette gegen die Schmerzen.", options: ["Kopf", "Bauch", "Arm", "Fuß"], correct: "Kopf", level: "easy", explanation: "Der Kopf: đầu." },
+            { question: "Ich schreibe mit meiner rechten ___.", options: ["Hand", "Nase", "Schulter", "Zunge"], correct: "Hand", level: "easy", explanation: "Die Hand: bàn tay." },
+            { question: "Ich habe ___ und brauche ein Taschentuch.", options: ["Schnupfen", "Husten", "Fieber", "Bauchschmerzen"], correct: "Schnupfen", level: "medium", explanation: "Der Schnupfen: sổ mũi/cảm lạnh." },
+            { question: "Mein ___ tut weh, ich kann nicht gut gehen.", options: ["Bein", "Arm", "Ohr", "Auge"], correct: "Bein", level: "easy", explanation: "Das Bein: cái chân (dùng để đi lại)." },
+            { question: "Der Arzt schreibt mir ein ___ für die Apotheke.", options: ["Rezept", "Buch", "Heft", "Plakat"], correct: "Rezept", level: "hard", explanation: "Das Rezept: đơn thuốc." },
+            { question: "Ich putze mir dreimal am Tag die ___.", options: ["Zähne", "Haare", "Füße", "Hände"], correct: "Zähne", level: "easy", explanation: "Die Zähne: răng." },
+            { question: "Nach dem Essen habe ich oft ___.", options: ["Bauchschmerzen", "Zahnschmerzen", "Ohrenschmerzen", "Halsschmerzen"], correct: "Bauchschmerzen", level: "medium", explanation: "Die Bauchschmerzen: đau bụng (vùng bụng bên ngoài)." },
+            { question: "Meine ___ sind blond und sehr lang.", options: ["Haare", "Finger", "Zehen", "Augen"], correct: "Haare", level: "easy", explanation: "Das Haar: tóc." },
+            { question: "Ich atme durch die ___.", options: ["Nase", "Hand", "Schulter", "Hüfte"], correct: "Nase", level: "easy", explanation: "Die Nase: mũi (dùng để thở và ngửi)." },
+            { question: "Ich habe 40 Grad ___, ich muss im Bett bleiben.", options: ["Fieber", "Husten", "Schnupfen", "Durst"], correct: "Fieber", level: "medium", explanation: "Das Fieber: sốt cao." },
+            { question: "Wenn ich viel huste, habe ich oft ___.", options: ["Halsschmerzen", "Beinschmerzen", "Kopfschmerzen", "Rückenschmerzen"], correct: "Halsschmerzen", level: "medium", explanation: "Die Halsschmerzen: đau họng." },
+            { question: "Ich gehe zum ___, weil mein Zahn wehtut.", options: ["Zahnarzt", "Augenarzt", "Hautarzt", "Hausarzt"], correct: "Zahnarzt", level: "easy", explanation: "Der Zahnarzt: bác sĩ nha khoa." },
+            { question: "In der ___ kaufe ich meine Medikamente.", options: ["Apotheke", "Bäckerei", "Post", "Bank"], correct: "Apotheke", level: "easy", explanation: "Die Apotheke: hiệu thuốc." },
+            { question: "Ich trage eine ___, weil ich nicht gut sehen kann.", options: ["Brille", "Uhr", "Tasche", "Mütze"], correct: "Brille", level: "easy", explanation: "Die Brille: kính mắt." },
+            { question: "Mein ___ ist nach dem Sport sehr muskulös.", options: ["Körper", "Geist", "Schuh", "Hut"], correct: "Körper", level: "medium", explanation: "Der Körper: cơ thể." },
+            { question: "Ich habe mich geschnitten, ich brauche ein ___.", options: ["Pflaster", "Handtuch", "Kissen", "Buch"], correct: "Pflaster", level: "medium", explanation: "Das Pflaster: băng cá nhân." },
+            { question: "Der ___ untersucht den Patienten im Krankenhaus.", options: ["Arzt", "Lehrer", "Kellner", "Polizist"], correct: "Arzt", level: "easy", explanation: "Der Arzt: bác sĩ." },
+            { question: "Ich habe zu viel gearbeitet, jetzt habe ich ___.", options: ["Rückenschmerzen", "Hunger", "Durst", "Glück"], correct: "Rückenschmerzen", level: "medium", explanation: "Rückenschmerzen: đau lưng." },
+            { question: "Ich trage eine Halskette um den ___.", options: ["Hals", "Bauch", "Arm", "Fuß"], correct: "Hals", level: "easy", explanation: "Der Hals: cái cổ." },
+            { question: "Ich schmecke das Essen mit der ___.", options: ["Zunge", "Lippe", "Wange", "Stirn"], correct: "Zunge", level: "hard", explanation: "Die Zunge: lưỡi." },
+            { question: "Ich habe zehn ___ an den Händen.", options: ["Finger", "Zehen", "Nägel", "Gelenke"], correct: "Finger", level: "easy", explanation: "Der Finger: ngón tay." },
+            { question: "Ich habe zehn ___ an den Füßen.", options: ["Zehen", "Finger", "Fersen", "Knöchel"], correct: "Zehen", level: "medium", explanation: "Die Zehe: ngón chân." },
+            { question: "Der ___ ist das Gelenk in der Mitte des Arms.", options: ["Ellbogen", "Knie", "Handgelenk", "Fußgelenk"], correct: "Ellbogen", level: "hard", explanation: "Der Ellbogen: khuỷu tay." },
+            { question: "Das ___ ist das Gelenk in der Mitte des Beins.", options: ["Knie", "Handgelenk", "Schulter", "Hals"], correct: "Knie", level: "medium", explanation: "Das Knie: đầu gối." },
+            { question: "Ich trage den Rucksack auf den ___.", options: ["Schultern", "Füßen", "Händen", "Knien"], correct: "Schultern", level: "medium", explanation: "Die Schulter: vai." },
+            { question: "Mir ist ___, ich glaube, ich werde krank.", options: ["schwindelig", "lustig", "froh", "schnell"], correct: "schwindelig", level: "hard", explanation: "Schwindelig: chóng mặt." },
+            { question: "Mir ist ___, ich muss mich fast übergeben.", options: ["übel", "warm", "kalt", "müde"], correct: "übel", level: "hard", explanation: "Übel: buồn nôn." },
+            { question: "Das Child hat sich beim Hinfallen das ___ aufgeschürft.", options: ["Knie", "Ohr", "Auge", "Haar"], correct: "Knie", level: "medium", explanation: "Das Knie: đầu gối." },
+            { question: "Die ___ schützt unseren gesamten Körper.", options: ["Haut", "Kleidung", "Luft", "Sonne"], correct: "Haut", level: "hard", explanation: "Die Haut: da." },
+            { question: "Ich habe mir den ___ gebrochen und trage jetzt Gips.", options: ["Arm", "Finger", "Zahn", "Nagel"], correct: "Arm", level: "medium", explanation: "Der Arm: cánh tay." },
+            { question: "Mein ___ ist rot und brennt vom vielen Husten.", options: ["Hals", "Bauch", "Rücken", "Fuß"], correct: "Hals", level: "medium", explanation: "Der Hals: cổ/họng." },
+            { question: "Gesunde ___ sind wichtig zum Kauen.", options: ["Zähne", "Lippen", "Ohren", "Augen"], correct: "Zähne", level: "easy", explanation: "Die Zähne: răng (dùng để nhai)." },
+            { question: "Ich habe mir beim Fußball den ___ verknackst.", options: ["Fußknöchel", "Ellbogen", "Finger", "Hals"], correct: "Fußknöchel", level: "hard", explanation: "Der Knöchel: mắt cá chân." },
+            { question: "Ich schneide mir meine ___ mit einer Schere.", options: ["Fingernägel", "Haare", "Ohren", "Zähne"], correct: "Fingernägel", level: "medium", explanation: "Die Fingernägel: móng tay." },
+            { question: "Ich weine, und ___ laufen über mein Gesicht.", options: ["Tränen", "Schweißtropfen", "Regentropfen", "Perlen"], correct: "Tränen", level: "hard", explanation: "Die Träne: nước mắt." },
+            { question: "Beim Sport komme ich schnell ins ___.", options: ["Schwitzen", "Lachen", "Singen", "Tanzen"], correct: "Schwitzen", level: "hard", explanation: "Schwitzen: đổ mồ hôi." },
+            { question: "Ich habe Angst vor der ___ beim Arzt.", options: ["Spritze", "Gabel", "Schere", "Lampe"], correct: "Spritze", level: "hard", explanation: "Die Spritze: mũi tiêm." },
+            { question: "Der Arzt misst meine ___ mit einem Thermometer.", options: ["Körpertemperatur", "Schuhgröße", "Haarlänge", "Hunger"], correct: "Körpertemperatur", level: "hard", explanation: "Die Körpertemperatur: nhiệt độ cơ thể." },
+            { question: "Ich habe starke Schmerzen und brauche einen ___.", options: ["Verband", "Koffer", "Spiegel", "Stuhl"], correct: "Verband", level: "hard", explanation: "Der Verband: băng bó." },
+            { question: "Ich habe ein kleines Muttermal auf der ___.", options: ["Wange", "Lippe", "Stirn", "Nase"], correct: "Wange", level: "hard", explanation: "Die Wange: cái má." },
+            { question: "Ich trinke einen ___ gegen den starken Husten.", options: ["Hustensaft", "Apfelsaft", "Orangensaft", "Traubensaft"], correct: "Hustensaft", level: "medium", explanation: "Der Hustensaft: siro ho." },
+            { question: "Ich bin wieder gesund und fühle mich ___.", options: ["wohl", "schlecht", "krank", "müde"], correct: "wohl", level: "medium", explanation: "Sich wohl fühlen: cảm thấy khỏe mạnh/dễ chịu." },
+            { question: "Mein ___ ist nach dem langen Spaziergang sehr müde.", options: ["Fuß", "Mund", "Auge", "Ohr"], correct: "Fuß", level: "easy", explanation: "Der Fuß: bàn chân." }
+        ];
+
+        // --- PRONOUNS DATA (45 Questions) ---
+        const pronounQuestions = [
+            { question: "Ich liebe ___. (du - Akkusativ)", options: ["dich", "dir", "du", "dein"], correct: "dich", level: "easy", explanation: "Akkusativ von 'du' ist 'dich'." },
+            { question: "Kannst du ___ helfen? (ich - Dativ)", options: ["mir", "mich", "ich", "mein"], correct: "mir", level: "easy", explanation: "Das Verb 'helfen' braucht luôn đi với Dativ. ich -> mir." },
+            { question: "Wir besuchen ___. (er - Akkusativ)", options: ["ihn", "ihm", "er", "sein"], correct: "ihn", level: "easy", explanation: "'besuchen' + Akkusativ. er -> ihn." },
+            { question: "Das gehört ___. (wir - Dativ)", options: ["uns", "wir", "euch", "ihnen"], correct: "uns", level: "medium", explanation: "'gehören' + Dativ. wir -> uns." },
+            { question: "Ich danke ___. (Sie - Dativ)", options: ["Ihnen", "Sie", "Ihr", "ihnen"], correct: "Ihnen", level: "medium", explanation: "'danken' + Dativ. Sie (trang trọng) -> Ihnen." },
+            { question: "Siehst du das Kind? Ja, ich sehe ___.", options: ["es", "ihm", "ihn", "ihr"], correct: "es", level: "easy", explanation: "Das Kind (trung tính) -> es." },
+            { question: "Ich antworte ___ nicht sofort. (die Lehrerin - Dativ)", options: ["ihr", "ihm", "sie", "ihnen"], correct: "ihr", level: "medium", explanation: "'antworten' + Dativ. die Lehrerin (f) -> ihr." },
+            { question: "Wir rufen ___ morgen an. (ihr - Akkusativ)", options: ["euch", "uns", "ihnen", "sie"], correct: "euch", level: "medium", explanation: "'anrufen' + Akkusativ. ihr -> euch." },
+            { question: "Kommst du mit ___? (wir - Dativ)", options: ["uns", "euch", "ihnen", "mir"], correct: "uns", level: "easy", explanation: "Die phối hợp 'mit' luôn đi với Dativ. wir -> uns." },
+            { question: "Das Geschenk ist für ___. (er - Akkusativ)", options: ["ihn", "ihm", "sein", "er"], correct: "ihn", level: "medium", explanation: "Die phối hợp 'für' luôn đi với Akkusativ. er -> ihn." },
+            { question: "Ich zeige ___ die Stadt. (du - Dativ)", options: ["dir", "dich", "du", "dein"], correct: "dir", level: "medium", explanation: "Tân ngữ gián tiếp (người nhận) dùng Dativ. du -> dir." },
+            { question: "Wie geht es ___? (Sie - trang trọng)", options: ["Ihnen", "Sie", "Dir", "Euch"], correct: "Ihnen", level: "easy", explanation: "Cách hỏi thăm sức khỏe dùng Dativ: Wie geht es Ihnen?" },
+            { question: "Glaubst du ___? (ich - Dativ)", options: ["mir", "mich", "ich", "mein"], correct: "mir", level: "medium", explanation: "'glauben' + Dativ. ich -> mir." },
+            { question: "Hörst du die Musik? Ja, ich höre ___.", options: ["sie", "ihr", "es", "ihn"], correct: "sie", level: "medium", explanation: "Die Musik (f) -> sie." },
+            { question: "Wir treffen ___ um 8 Uhr. (sie - Plural)", options: ["sie", "ihnen", "euch", "uns"], correct: "sie", level: "medium", explanation: "'treffen' + Akkusativ. sie (pl) -> sie." },
+            { question: "Ich schenke ___ ein Buch. (er - Dativ)", options: ["ihm", "ihn", "er", "seinem"], correct: "ihm", level: "hard", explanation: "'schenken' + Dativ (người nhận). er -> ihm." },
+            { question: "Können Sie ___ verstehen? (ich - Akkusativ)", options: ["mich", "mir", "ich", "mein"], correct: "mich", level: "easy", explanation: "'verstehen' + Akkusativ. ich -> mich." },
+            { question: "Das Auto gehört ___. (mein Bruder - Dativ)", options: ["ihm", "ihn", "es", "seinem"], correct: "ihm", level: "hard", explanation: "Mein Bruder (m) -> ihm." },
+            { question: "Ich gratuliere ___ zum Geburtstag. (du - Dativ)", options: ["dir", "dich", "du", "dein"], correct: "dir", level: "medium", explanation: "'gratulieren' + Dativ. du -> dir." },
+            { question: "Wer ist das? - Das bin ___.", options: ["ich", "mich", "mir", "mein"], correct: "ich", level: "easy", explanation: "Sau động từ 'sein' luôn là Nominativ." },
+            { question: "Möchtet ___ einen Kaffee? (ihr - Plural)", options: ["ihr", "sie", "wir", "Sie"], correct: "ihr", level: "easy", explanation: "Chia động từ cho ngôi 'ihr'." },
+            { question: "___ kommen aus Vietnam. (wir)", options: ["Wir", "Ihr", "Sie", "sie"], correct: "Wir", level: "easy", explanation: "Wir: chúng tôi." },
+            { question: "Wo wohnst ___?", options: ["du", "er", "sie", "ihr"], correct: "du", level: "easy", explanation: "Đuôi động từ -st đi với 'du'." },
+            { question: "___ ist sehr nett. (sie - cô ấy)", options: ["Sie", "Er", "Es", "Wir"], correct: "Sie", level: "easy", explanation: "Sie: cô ấy." },
+            { question: "___ lerne Deutsch. (ich)", options: ["Ich", "Du", "Er", "Sie"], correct: "Ich", level: "easy", explanation: "Ich: tôi." },
+            { question: "Haben ___ Zeit? (Sie - trang trọng)", options: ["Sie", "sie", "ihr", "du"], correct: "Sie", level: "easy", explanation: "Sie: Ngài/Các vị (trang trọng)." },
+            { question: "Was macht ___? (er - anh ấy)", options: ["er", "sie", "es", "ich"], correct: "er", level: "easy", explanation: "Er: anh ấy." },
+            { question: "Das ist ein Buch. ___ ist neu.", options: ["Es", "Sie", "Er", "Ihn"], correct: "Es", level: "easy", explanation: "Das Buch (trung tính) -> es." },
+            { question: "___ seid meine Freunde. (ihr)", options: ["Ihr", "Wir", "Sie", "sie"], correct: "Ihr", level: "easy", explanation: "Ihr: các bạn (thân mật)." },
+            { question: "Kommst ___ heute mit?", options: ["du", "er", "sie", "ihr"], correct: "du", level: "easy", explanation: "du kommst." },
+            { question: "___ spielt gerne Fußball. (er)", options: ["Er", "Sie", "Es", "Ich"], correct: "Er", level: "easy", explanation: "Er: anh ấy." },
+            { question: "___ sind Lehrer von Beruf. (sie - họ)", options: ["Sie", "Ihr", "Wir", "Er"], correct: "Sie", level: "medium", explanation: "Sie (họ) + sind." },
+            { question: "Gehst ___ heute ins Kino?", options: ["du", "er", "sie", "ihr"], correct: "du", level: "easy", explanation: "du gehst." },
+            { question: "___ trinken Tee am Nachmittag. (wir)", options: ["Wir", "Ihr", "Sie", "Er"], correct: "Wir", level: "easy", explanation: "Wir: chúng tôi." },
+            { question: "Ist ___ zu Hause? (sie - cô ấy)", options: ["sie", "er", "es", "du"], correct: "sie", level: "easy", explanation: "sie (cô ấy)." },
+            { question: "Das Buch ist für ___. (du - Akkusativ)", options: ["dich", "dir", "du", "dein"], correct: "dich", level: "medium", explanation: "für + Akkusativ: dich." },
+            { question: "Ich helfe ___. (die Frau - Dativ)", options: ["ihr", "ihm", "sie", "ihnen"], correct: "ihr", level: "hard", explanation: "helfen + Dativ. Die Frau (f) -> ihr." },
+            { question: "Siehst du ___? (der Mann - Akkusativ)", options: ["ihn", "ihm", "er", "es"], correct: "ihn", level: "hard", explanation: "Akkusativ của 'er' (der Mann) là 'ihn'." },
+            { question: "Er dankt ___. (wir - Dativ)", options: ["uns", "euch", "ihnen", "wir"], correct: "uns", level: "medium", explanation: "danken + Dativ. wir -> uns." },
+            { question: "Könnt ___ mir helfen?", options: ["ihr", "sie", "du", "wir"], correct: "ihr", level: "medium", explanation: "Chia động từ cho 'ihr'." },
+            { question: "___ singt sehr schön. (sie - cô ấy)", options: ["Sie", "Er", "Es", "Ich"], correct: "Sie", level: "easy", explanation: "Sie: cô ấy." },
+            { question: "Hörst du ___? (ich - Akkusativ)", options: ["mich", "mir", "ich", "mein"], correct: "mich", level: "medium", explanation: "Akkusativ của 'ich' là 'mich'." },
+            { question: "Das gehört ___. (sie - họ, Dativ)", options: ["ihnen", "sie", "euch", "uns"], correct: "ihnen", level: "hard", explanation: "Dativ Plural của 'sie' (họ) là 'ihnen'." },
+            { question: "Wir besuchen ___ morgen. (du - Akkusativ)", options: ["dich", "dir", "du", "dein"], correct: "dich", level: "medium", explanation: "Akkusativ: dich." },
+            { question: "Kommst du zu ___? (ich - Dativ)", options: ["mir", "mich", "ich", "mein"], correct: "mir", level: "hard", explanation: "zu + Dativ: mir." }
+        ];
+
+        // --- POSSESSIVE DATA (45 Questions) ---
+        const possessiveQuestions = [
+            { question: "Das ist ___ Hund. (ich - m)", options: ["mein", "meine", "meinen", "meinem"], correct: "mein", level: "easy", explanation: "Nominativ maskulin: mein." },
+            { question: "Wo ist ___ Tasche? (du - f)", options: ["deine", "dein", "deiner", "deinem"], correct: "deine", level: "easy", explanation: "Nominativ feminin: deine." },
+            { question: "Er hilft ___ Vater. (er - Dativ m)", options: ["seinem", "sein", "seinen", "seiner"], correct: "seinem", level: "medium", explanation: "Dativ maskulin: seinem." },
+            { question: "Wir danken ___ Lehrerin. (wir - Dativ f)", options: ["unserer", "unsere", "unser", "unseren"], correct: "unserer", level: "medium", explanation: "Dativ feminin: unserer." },
+            { question: "Das ist ___ Haus. (sie/cô ấy - n)", options: ["ihr", "ihre", "ihrem", "ihren"], correct: "ihr", level: "medium", explanation: "Nominativ neutrum: ihr." },
+            { question: "Wo sind ___ Kinder? (du - Plural)", options: ["deine", "dein", "deinen", "deiner"], correct: "deine", level: "easy", explanation: "Plural: deine." },
+            { question: "Das ist ___ Auto. (wir - n)", options: ["unser", "unsere", "unserem", "unseren"], correct: "unser", level: "medium", explanation: "Nominativ neutrum: unser." },
+            { question: "___ Name ist Minh. (ich - m)", options: ["Mein", "Meine", "Meinen", "Meinem"], correct: "Mein", level: "easy", explanation: "Der Name (m) -> Mein." },
+            { question: "Ist das ___ Buch? (Sie/Ngài - n)", options: ["Ihr", "Ihre", "Ihrem", "Ihren"], correct: "Ihr", level: "medium", explanation: "Possessivartikel trang trọng: Ihr." },
+            { question: "Er sucht ___ Schlüssel. (er - Akkusativ m)", options: ["seinen", "sein", "seinem", "seiner"], correct: "seinen", level: "hard", explanation: "Akkusativ maskulin: seinen." },
+            { question: "Wir lieben ___ Stadt. (wir - Akkusativ f)", options: ["unsere", "unser", "unserer", "unserem"], correct: "unsere", level: "medium", explanation: "Akkusativ feminin: unsere." },
+            { question: "Hast du ___ Hausaufgaben schon gemacht? (du - Plural)", options: ["deine", "dein", "deinen", "deiner"], correct: "deine", level: "medium", explanation: "Plural: deine." },
+            { question: "___ Mutter ist Ärztin. (ich - f)", options: ["Meine", "Mein", "Meinen", "Meiner"], correct: "Meine", level: "easy", explanation: "Die Mutter (f) -> Meine." },
+            { question: "Sie besucht ___ Großeltern. (sie/cô ấy - Plural)", options: ["ihre", "ihr", "ihren", "ihrer"], correct: "ihre", level: "medium", explanation: "Plural: ihre." },
+            { question: "Wie ist ___ Telefonnummer?", options: ["deine", "dein", "deiner", "deinem"], correct: "deine", level: "easy", explanation: "Die Nummer (f) -> deine." },
+            { question: "Das ist ___ Zimmer. (er - n)", options: ["sein", "seine", "seinem", "seinen"], correct: "sein", level: "medium", explanation: "Nominativ neutrum: sein." },
+            { question: "Wir brauchen ___ Hilfe. (ihr - f)", options: ["eure", "euer", "eurer", "euren"], correct: "eure", level: "hard", explanation: "Die Hilfe (f). euer -> eure." },
+            { question: "Wo wohnen ___ Eltern? (Sie - Plural)", options: ["Ihre", "Ihr", "Ihren", "Ihrer"], correct: "Ihre", level: "medium", explanation: "Plural trang trọng: Ihre." },
+            { question: "___ Vater arbeitet sehr viel. (du - m)", options: ["Dein", "Deine", "Deinen", "Deinem"], correct: "Dein", level: "easy", explanation: "Der Vater (m) -> Dein." },
+            { question: "Ich mag ___ Fahrrad. (ich - Akkusativ n)", options: ["mein", "meine", "meinen", "meinem"], correct: "mein", level: "medium", explanation: "Akkusativ neutrum: mein." },
+            { question: "Hast du ___ Freund gesehen? (ich - Akkusativ m)", options: ["meinen", "mein", "meine", "meinem"], correct: "meinen", level: "hard", explanation: "Akkusativ maskulin: meinen." },
+            { question: "___ Katze ist sehr süß. (wir - f)", options: ["Unsere", "Unser", "Unseren", "Unserer"], correct: "Unsere", level: "medium", explanation: "Die Katze (f) -> Unsere." },
+            { question: "Er liest ___ Buch. (er - Akkusativ n)", options: ["sein", "seine", "seinen", "seinem"], correct: "sein", level: "medium", explanation: "Akkusativ neutrum: sein." },
+            { question: "Haben Sie ___ Ausweis dabei? (Sie - Akkusativ m)", options: ["Ihren", "Ihr", "Ihre", "Ihrem"], correct: "Ihren", level: "hard", explanation: "Akkusativ maskulin: Ihren." },
+            { question: "Ich kenne ___ Bruder. (du - Akkusativ m)", options: ["deinen", "dein", "deine", "deinem"], correct: "deinen", level: "hard", explanation: "Akkusativ maskulin: deinen." },
+            { question: "___ Wohnung ist sehr groß. (sie/họ - f)", options: ["Ihre", "Ihr", "Ihren", "Ihrer"], correct: "Ihre", level: "medium", explanation: "Die Wohnung (f) -> Ihre." },
+            { question: "Wo ist ___ Handy?", options: ["mein", "meine", "meinen", "meinem"], correct: "mein", level: "easy", explanation: "Das Handy (n) -> mein." },
+            { question: "Wir trinken ___ Kaffee. (wir - Akkusativ m)", options: ["unseren", "unser", "unsere", "unserem"], correct: "unseren", level: "hard", explanation: "Akkusativ maskulin: unseren." },
+            { question: "Hast du ___ Schlüssel? (du - Akkusativ m)", options: ["deinen", "dein", "deine", "deinem"], correct: "deinen", level: "hard", explanation: "Akkusativ maskulin: deinen." },
+            { question: "___ Tasche ist weg.", options: ["Meine", "Mein", "Meinen", "Meiner"], correct: "Meine", level: "easy", explanation: "Die Tasche (f) -> Meine." },
+            { question: "Er liebt ___ Frau. (er - f)", options: ["seine", "sein", "seinen", "seiner"], correct: "seine", level: "medium", explanation: "Die Frau (f) -> seine." },
+            { question: "Wie ist ___ Name?", options: ["Ihr", "Ihre", "Ihren", "Ihrer"], correct: "Ihr", level: "easy", explanation: "Der Name (m) -> Ihr." },
+            { question: "___ Hobby ist Kochen.", options: ["Mein", "Meine", "Meinen", "Meinem"], correct: "Mein", level: "easy", explanation: "Das Hobby (n) -> Mein." },
+            { question: "Wir besuchen ___ Opa. (wir - Akkusativ m)", options: ["unseren", "unser", "unsere", "unserem"], correct: "unseren", level: "hard", explanation: "Akkusativ maskulin: unseren." },
+            { question: "Ist das ___ Auto? (du - n)", options: ["dein", "deine", "deinen", "deiner"], correct: "dein", level: "easy", explanation: "Das Auto (n) -> dein." },
+            { question: "___ Lehrer ist sehr nett.", options: ["Unser", "Unsere", "Unseren", "Unserem"], correct: "Unser", level: "medium", explanation: "Der Lehrer (m) -> Unser." },
+            { question: "Ich brauche ___ Hilfe. (du - f)", options: ["deine", "dein", "deiner", "deinen"], correct: "deine", level: "medium", explanation: "Die Hilfe (f) -> deine." },
+            { question: "___ Kind spielt im Garten. (sie/cô ấy - n)", options: ["Ihr", "Ihre", "Ihrem", "Ihren"], correct: "Ihr", level: "medium", explanation: "Das Kind (n) -> ihr." },
+            { question: "Wo sind ___ Freunde? (ihr - Plural)", options: ["eure", "euer", "euren", "eurer"], correct: "eure", level: "hard", explanation: "Plural: eure." },
+            { question: "Ich habe ___ Brille vergessen. (ich - f)", options: ["meine", "mein", "meinen", "meiner"], correct: "meine", level: "medium", explanation: "Die Brille (f) -> meine." },
+            { question: "___ Laptop ist neu. (er - m)", options: ["Sein", "Seine", "Seinen", "Seinem"], correct: "Sein", level: "medium", explanation: "Der Laptop (m) -> Sein." },
+            { question: "Wir essen ___ Mittagessen. (wir - n)", options: ["unser", "unsere", "unseren", "unserem"], correct: "unser", level: "medium", explanation: "Das Essen (n) -> unser." },
+            { question: "Haben Sie ___ Reisepass dabei? (Sie - Akkusativ m)", options: ["Ihren", "Ihr", "Ihre", "Ihrem"], correct: "Ihren", level: "hard", explanation: "Akkusativ maskulin: Ihren." },
+            { question: "___ Hund ist sehr groß. (sie/họ - m)", options: ["Ihr", "Ihre", "Ihren", "Ihrer"], correct: "Ihr", level: "medium", explanation: "Der Hund (m) -> Ihr." },
+            { question: "Ich suche ___ Brille. (ich - f)", options: ["meine", "mein", "meiner", "meinen"], correct: "meine", level: "medium", explanation: "Die Brille (f) -> meine." }
+        ];
+
+        // --- DATIV & PREPOSITIONS DATA (45 Questions) ---
+        const dativQuestions = [
+            { question: "Ich bin ___ Kino. (in - Wo?)", options: ["im", "ins", "an", "am"], correct: "im", level: "easy", explanation: "in + dem = im (Dativ). Dùng cho vị trí (Wo?)." },
+            { question: "Das Buch liegt auf ___ Tisch.", options: ["dem", "den", "der", "das"], correct: "dem", level: "easy", explanation: "auf + Dativ (m) = auf dem." },
+            { question: "Häng das Bild an ___ Wand!", options: ["die", "der", "das", "den"], correct: "die", level: "hard", explanation: "Wohin? (lên đâu) dùng Akkusativ. an die Wand." },
+            { question: "Ich gehe zu ___ Post.", options: ["der", "die", "den", "das"], correct: "der", level: "medium", explanation: "zu + der (f) = zur Post." },
+            { question: "Er arbeitet bei ___ Bank.", options: ["einer", "eine", "einen", "einem"], correct: "einer", level: "hard", explanation: "bei + Dativ. eine Bank -> einer Bank." },
+            { question: "Wir wohnen ___ Berlin.", options: ["in", "an", "auf", "bei"], correct: "in", level: "easy", explanation: "in + tên thành phố." },
+            { question: "Das Auto steht in ___ Garage.", options: ["der", "die", "den", "dem"], correct: "der", level: "medium", explanation: "in + Dativ (f) = in der." },
+            { question: "Ich fahre mit ___ Bus.", options: ["dem", "den", "der", "das"], correct: "dem", level: "medium", explanation: "mit + Dativ (m) = mit dem." },
+            { question: "Das Kind läuft zu ___ Mutter.", options: ["der", "die", "den", "dem"], correct: "der", level: "hard", explanation: "zu + Dativ (f) = zu der." },
+            { question: "Wir sitzen ___ Tisch.", options: ["am", "im", "ans", "ins"], correct: "am", level: "medium", explanation: "an + dem = am." },
+            { question: "Ich bin ___ Hause.", options: ["zu", "nach", "in", "an"], correct: "zu", level: "easy", explanation: "zu Hause: ở nhà." },
+            { question: "Ich gehe ___ Hause.", options: ["nach", "zu", "in", "an"], correct: "nach", level: "easy", explanation: "nach Hause: về nhà." },
+            { question: "Das Bild hängt an ___ Wand.", options: ["der", "die", "den", "das"], correct: "der", level: "hard", explanation: "Wo? -> Dativ. an der Wand." },
+            { question: "Er wartet ___ Bahnhof.", options: ["am", "im", "ans", "ins"], correct: "am", level: "medium", explanation: "an + dem = am." },
+            { question: "Wir gehen in ___ Park.", options: ["den", "dem", "der", "das"], correct: "den", level: "medium", explanation: "Wohin? -> Akkusativ. in den Park." },
+            { question: "Das Handy liegt auf ___ Sofa.", options: ["dem", "das", "der", "den"], correct: "dem", level: "medium", explanation: "Wo? -> Dativ. auf dem Sofa." },
+            { question: "Ich komme ___ Vietnam.", options: ["aus", "von", "in", "nach"], correct: "aus", level: "easy", explanation: "aus + quốc gia." },
+            { question: "Wir fliegen ___ Vietnam.", options: ["nach", "in", "zu", "an"], correct: "nach", level: "easy", explanation: "nach + quốc gia (không mạo từ)." },
+            { question: "Er ist ___ Arzt.", options: ["beim", "zum", "am", "im"], correct: "beim", level: "hard", explanation: "bei + dem = beim." },
+            { question: "Ich gehe ___ Arzt.", options: ["zum", "beim", "ans", "ins"], correct: "zum", level: "hard", explanation: "zu + dem = zum." },
+            { question: "Das Geschenk ist von ___.", options: ["mir", "mich", "ich", "mein"], correct: "mir", level: "medium", explanation: "von + Dativ: von mir." },
+            { question: "Ich spreche mit ___.", options: ["dir", "dich", "du", "dein"], correct: "dir", level: "medium", explanation: "mit + Dativ: mit dir." },
+            { question: "Das Hotel liegt ___ Meer.", options: ["am", "im", "ans", "ins"], correct: "am", level: "hard", explanation: "an + dem = am." },
+            { question: "Wir gehen in ___ Schule.", options: ["die", "der", "den", "das"], correct: "die", level: "medium", explanation: "Wohin? -> Akkusativ (f): in die." },
+            { question: "Er lernt in ___ Schule.", options: ["der", "die", "den", "das"], correct: "der", level: "medium", explanation: "Wo? -> Dativ (f): in der." },
+            { question: "Das Flugzeug fliegt ___ die Stadt.", options: ["über", "unter", "auf", "an"], correct: "über", level: "hard", explanation: "über (phía trên, không tiếp xúc)." },
+            { question: "Der Hund schläft unter ___ Tisch.", options: ["dem", "den", "der", "das"], correct: "dem", level: "medium", explanation: "Wo? -> Dativ. unter dem Tisch." },
+            { question: "Stell die Schuhe neben ___ Tür!", options: ["die", "der", "das", "den"], correct: "die", level: "hard", explanation: "Wohin? -> Akkusativ. neben die Tür." },
+            { question: "Das Auto parkt hinter ___ Haus.", options: ["dem", "das", "der", "den"], correct: "dem", level: "medium", explanation: "Wo? -> Dativ. hinter dem Haus." },
+            { question: "Wir treffen uns vor ___ Bahnhof.", options: ["dem", "den", "der", "das"], correct: "dem", level: "medium", explanation: "vor + Dativ (m): vor dem." },
+            { question: "Ich hänge die Lampe über ___ Tisch.", options: ["den", "dem", "der", "das"], correct: "den", level: "hard", explanation: "Wohin? -> Akkusativ. über den Tisch." },
+            { question: "Die Katze springt auf ___ Stuhl.", options: ["den", "dem", "der", "das"], correct: "den", level: "hard", explanation: "Wohin? -> Akkusativ. auf den Stuhl." },
+            { question: "Ich arbeite ___ Büro.", options: ["im", "ins", "am", "ans"], correct: "im", level: "easy", explanation: "in + dem = im." },
+            { question: "Wir gehen ___ Restaurant.", options: ["ins", "im", "ans", "am"], correct: "ins", level: "medium", explanation: "in + das = ins." },
+            { question: "Das Buch steht ___ Regal.", options: ["im", "ins", "am", "ans"], correct: "im", level: "medium", explanation: "trong kệ: im Regal." },
+            { question: "Er sitzt auf ___ Sofa.", options: ["dem", "das", "der", "den"], correct: "dem", level: "easy", explanation: "auf + Dativ: trên sofa." },
+            { question: "Ich fahre mit ___ Zug.", options: ["dem", "den", "der", "das"], correct: "dem", level: "medium", explanation: "mit + Dativ: mit dem Zug." },
+            { question: "Kommst du zu ___?", options: ["mir", "mich", "ich", "mein"], correct: "mir", level: "easy", explanation: "zu + Dativ: zu mir." },
+            { question: "Das ist ein Geschenk von ___.", options: ["dir", "dich", "du", "dein"], correct: "dir", level: "medium", explanation: "von + Dativ: von dir." },
+            { question: "Wir wohnen im ___ von Deutschland.", options: ["Osten", "Ost", "Ostlich", "Ostens"], correct: "Osten", level: "hard", explanation: "im + hướng." },
+            { question: "Er geht ___ Fenster.", options: ["ans", "am", "ins", "im"], correct: "ans", level: "hard", explanation: "an + das = ans (Wohin)." },
+            { question: "Die Geschichte steht ___ Buch.", options: ["im", "ins", "am", "ans"], correct: "im", level: "easy", explanation: "in + dem = im." },
+            { question: "Ich warte an ___ Ecke.", options: ["der", "die", "den", "das"], correct: "der", level: "hard", explanation: "an + Dativ (f): an der Ecke." },
+            { question: "Wir fliegen nach ___.", options: ["Deutschland", "Berliner", "Deutscher", "Deutsch"], correct: "Deutschland", level: "easy", explanation: "nach + quốc gia." },
+            { question: "Das Kind spielt ___ Garten.", options: ["im", "ins", "am", "ans"], correct: "im", level: "easy", explanation: "in + dem = im." }
+        ];
+
+        // --- MODAL VERBEN DATA (45 Questions) ---
+        const modalQuestions = [
+            { question: "Ich ___ Deutsch sprechen. (können)", options: ["kann", "kannst", "können", "könnt"], correct: "kann", level: "easy", explanation: "ich -> kann." },
+            { question: "Du ___ heute lernen. (müssen)", options: ["musst", "muss", "müssen", "müsst"], correct: "musst", level: "easy", explanation: "du -> musst." },
+            { question: "Hier ___ man nicht rauchen. (dürfen)", options: ["darf", "darfst", "dürfen", "dürft"], correct: "darf", level: "hard", explanation: "man (ngôi 3 số ít) -> darf." },
+            { question: "Wir ___ eine Pizza essen. (wollen)", options: ["wollen", "will", "willst", "wollt"], correct: "wollen", level: "medium", explanation: "wir -> wollen." },
+            { question: "___ du einen Kaffee?", options: ["Möchtest", "Möchtet", "Möchten", "Möchte"], correct: "Möchtest", level: "medium", explanation: "du -> möchtest." },
+            { question: "Er ___ gut schwimmen. (können)", options: ["kann", "kannst", "können", "könnt"], correct: "kann", level: "easy", explanation: "er -> kann." },
+            { question: "Ihr ___ hier nicht spielen. (dürfen)", options: ["dürft", "darf", "darfst", "dürfen"], correct: "dürft", level: "hard", explanation: "ihr -> dürft." },
+            { question: "___ Sie mir helfen? (können)", options: ["Können", "Kannst", "Könnt", "Kann"], correct: "Können", level: "easy", explanation: "Sie (trang trọng) -> können." },
+            { question: "Ich ___ Schokolade sehr gerne. (mögen)", options: ["mag", "magst", "mögen", "möchtet"], correct: "mag", level: "medium", explanation: "ich -> mag." },
+            { question: "Du ___ zum Arzt gehen. (sollen)", options: ["sollst", "soll", "sollen", "sollt"], correct: "sollst", level: "hard", explanation: "du -> sollst." },
+            { question: "Wir ___ früh aufstehen. (müssen)", options: ["müssen", "muss", "müsst", "musst"], correct: "müssen", level: "medium", explanation: "wir -> müssen." },
+            { question: "___ ihr Fußball spielen?", options: ["Könnt", "Können", "Kannst", "Kann"], correct: "Könnt", level: "medium", explanation: "ihr -> könnt." },
+            { question: "Hier ___ man nicht parken. (dürfen)", options: ["darf", "kann", "muss", "will"], correct: "darf", level: "hard", explanation: "dürfen: sự cho phép/cấm đoán." },
+            { question: "Ich ___ nach Hause gehen. (wollen)", options: ["will", "wollen", "wollt", "willst"], correct: "will", level: "medium", explanation: "ich -> will." },
+            { question: "___ du Pizza?", options: ["Magst", "Mag", "Mögen", "Möchtet"], correct: "Magst", level: "easy", explanation: "du -> magst." },
+            { question: "Er ___ seine Hausaufgaben machen. (müssen)", options: ["muss", "musst", "müssen", "müsst"], correct: "muss", level: "medium", explanation: "er -> muss." },
+            { question: "Wir ___ Deutsch lernen. (sollen)", options: ["sollen", "sollst", "soll", "sollt"], correct: "sollen", level: "hard", explanation: "wir -> sollen." },
+            { question: "___ ihr ein Bier trinken?", options: ["Wollt", "Wollen", "Willst", "Will"], correct: "Wollt", level: "medium", explanation: "ihr -> wollt." },
+            { question: "Ich ___ Klavier spielen. (können)", options: ["kann", "kannst", "können", "könnt"], correct: "kann", level: "easy", explanation: "ich -> kann." },
+            { question: "Du ___ nicht lügen. (sollen)", options: ["sollst", "soll", "darfst", "musst"], correct: "sollst", level: "hard", explanation: "du -> sollst (lời khuyên/đạo đức)." },
+            { question: "___ Sie einen Tee trinken?", options: ["Möchten", "Möchtet", "Wollen", "Wollt"], correct: "Möchten", level: "medium", explanation: "Sie -> möchten." },
+            { question: "Er ___ ins Kino gehen. (wollen)", options: ["will", "wollen", "wollt", "willst"], correct: "will", level: "medium", explanation: "er -> will." },
+            { question: "Wir ___ sehr gut schwimmen. (können)", options: ["können", "kann", "könnt", "kannst"], correct: "können", level: "easy", explanation: "wir -> können." },
+            { question: "Ihr ___ das Zimmer aufräumen. (müssen)", options: ["müsst", "muss", "müssen", "musst"], correct: "müsst", level: "medium", explanation: "ihr -> müsst." },
+            { question: "Ich ___ Äpfel. (mögen)", options: ["mag", "magst", "mögen", "möchtet"], correct: "mag", level: "easy", explanation: "ich -> mag." },
+            { question: "Du ___ den Lehrer fragen. (sollen)", options: ["sollst", "soll", "sollen", "sollt"], correct: "sollst", level: "hard", explanation: "du -> sollst." },
+            { question: "___ er Auto fahren? (können)", options: ["Kann", "Kannst", "Können", "Könnt"], correct: "Kann", level: "medium", explanation: "er -> kann." },
+            { question: "Hier ___ man nicht laut sein. (dürfen)", options: ["darf", "darfst", "dürfen", "dürft"], correct: "darf", level: "hard", explanation: "man -> darf." },
+            { question: "Ich ___ ein Brötchen essen. (möchten)", options: ["möchte", "möchten", "möchtet", "will"], correct: "möchte", level: "medium", explanation: "ich -> möchte." },
+            { question: "Du ___ dir die Hände waschen. (müssen)", options: ["musst", "muss", "müssen", "müsst"], correct: "musst", level: "medium", explanation: "du -> musst." },
+            { question: "Wir ___ ein Picknick machen. (wollen)", options: ["wollen", "will", "willst", "wollt"], correct: "wollen", level: "medium", explanation: "wir -> wollen." },
+            { question: "___ ihr mir helfen?", options: ["Könnt", "Können", "Kannst", "Kann"], correct: "Könnt", level: "medium", explanation: "ihr -> könnt." },
+            { question: "Er ___ kein Fleisch essen. (mögen)", options: ["mag", "will", "kann", "darf"], correct: "mag", level: "hard", explanation: "mögen + danh từ." },
+            { question: "Ich ___ jetzt schlafen gehen, ich bin müde. (müssen)", options: ["muss", "musst", "müssen", "müsst"], correct: "muss", level: "medium", explanation: "ich -> muss." },
+            { question: "Du ___ mehr Wasser trinken. (sollen)", options: ["sollst", "soll", "sollen", "sollt"], correct: "sollst", level: "hard", explanation: "du -> sollst." },
+            { question: "___ Sie schwimmen? (können)", options: ["Können", "Könnt", "Kannst", "Kann"], correct: "Können", level: "easy", explanation: "Sie -> können." },
+            { question: "Wir ___ heute spazieren gehen. (dürfen)", options: ["dürfen", "darf", "darfst", "dürft"], correct: "dürfen", level: "medium", explanation: "wir -> dürfen." },
+            { question: "___ ihr Deutsch lernen?", options: ["Wollt", "Wollen", "Willst", "Will"], correct: "Wollt", level: "medium", explanation: "ihr -> wollt." },
+            { question: "Ich ___ leider nicht kommen. (können)", options: ["kann", "kannst", "können", "könnt"], correct: "kann", level: "medium", explanation: "ich -> kann." },
+            { question: "Du ___ hier nicht rauchen. (dürfen)", options: ["darfst", "darf", "musst", "sollst"], correct: "darfst", level: "hard", explanation: "du darfst nicht (cấm)." },
+            { question: "___ er morgen kommen? (können)", options: ["Kann", "Kannst", "Können", "Könnt"], correct: "Kann", level: "medium", explanation: "er -> kann." },
+            { question: "Wir ___ eine Pizza bestellen. (möchten)", options: ["möchten", "möchte", "möchtet", "wollen"], correct: "möchten", level: "medium", explanation: "wir -> möchten." },
+            { question: "Ihr ___ früh ins Bett gehen. (sollen)", options: ["sollt", "soll", "sollst", "sollen"], correct: "sollt", level: "hard", explanation: "ihr -> sollt." },
+            { question: "Ich ___ meine Hausaufgaben machen. (müssen)", options: ["muss", "musst", "müssen", "müsst"], correct: "muss", level: "medium", explanation: "ich -> muss." },
+            { question: "___ du mitkommen?", options: ["Willst", "Will", "Wollen", "Wollt"], correct: "Willst", level: "medium", explanation: "du -> willst." }
+        ];
+
+        // --- GENERAL QUIZ (Random 45 from all categories) ---
+        const allQuestionsPool = [
+            ...vocabQuestions,
+            ...bodyQuestions,
+            ...pronounQuestions,
+            ...possessiveQuestions,
+            ...dativQuestions,
+            ...modalQuestions
+        ];
+        const generalQuestions = shuffle(allQuestionsPool).slice(0, 45);
+
+        // --- INIT ---
+        window.onload = () => {
+            new Quiz('tab-vocab', vocabQuestions, 'Từ vựng & Nhà cửa');
+            new Quiz('tab-body', bodyQuestions, 'Sức khỏe & Cơ thể');
+            new Quiz('tab-pronoun', pronounQuestions, 'Đại từ (Pronomen)');
+            new Quiz('tab-possessive', possessiveQuestions, 'Sở hữu (Possessiv)');
+            new Quiz('tab-dativ', dativQuestions, 'Dativ & Giới từ');
+            new Quiz('tab-modal', modalQuestions, 'Modal Verben');
+            new Quiz('tab-general', generalQuestions, 'Tổng hợp 45 câu');
+        };
+    </script>
+</body>
+
+</html>
